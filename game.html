@@ -413,7 +413,7 @@
         </div>
     </div>
 
-    <!-- Панель адміністратора (F2 після входу) -->
+    <!-- Панель адміністратора -->
     <div id="adminPanel">
         <h3>Панель адміністратора<span class="admin-badge">ADMIN</span></h3>
 
@@ -446,7 +446,7 @@
         </div>
 
         <div class="admin-hint">
-            Відкрити/закрити панель: <b>F2</b><br>
+            Відкрити/закрити панель: <b>F9</b><br>
             Статистика: <b>Tab</b>
         </div>
     </div>
@@ -457,8 +457,9 @@
         const ROWS = 12;
         const CELL_SIZE = 32;
 
-        // Endpoint Google Apps Script для перевірки пароля
-        const ADMIN_ENDPOINT = "https://script.google.com/macros/s/AKfycbzV_rJbmWR_9l0Oee-5LlG8LmC194ZkOGTKkszJPXY3H-gVTgy1oprfCzXWNCN9nsjT2Q/exec";
+        // ЗМІНИТИ ПЕРЕД ВИКЛАДАННЯМ НА GITHUB!
+        const ADMIN_PASSWORD =  "X9v@фіівфафіаіф21кцйфіасфамівм321кв    цсчфіва 23кавіміц3225кавіфмц е4цецссац38473842661324861241294721111111111111111111111111111111114217421741242614521471F№***q7!rP2#Lm124124124121412412цуйівіфапц11214*****************1241***9авітhabsfasf1421fsdv3*0Z^tWk";
+        
 
         // ----------------- БАЗОВІ ПОСИЛАННЯ -----------------
         const canvas = document.getElementById('gameCanvas');
@@ -662,6 +663,7 @@
         }
 
         function crash() {
+            // Якщо адмін та безкінечні життя – просто ресет позиції, без втрати життя та статистики
             if (isAdmin && adminConfig.infiniteLives) {
                 resetPos();
                 return;
@@ -691,6 +693,7 @@
                 y: snake[0].y + direction.y
             };
 
+            // Перевірка зіткнень
             let collided =
                 head.x < 0 || head.x >= COLS ||
                 head.y < 0 || head.y >= ROWS ||
@@ -776,42 +779,15 @@
             adminLoginEl.style.display = 'none';
         }
 
-        async function submitAdminLogin() {
+        function submitAdminLogin() {
             const pass = adminPasswordInput.value.trim();
-            if (!pass) {
-                adminLoginError.innerText = 'Введи пароль';
-                return;
-            }
-
-            adminLoginError.innerText = 'Перевірка...';
-
-            try {
-                const res = await fetch(ADMIN_ENDPOINT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ password: pass })
-                });
-
-                if (!res.ok) {
-                    adminLoginError.innerText = 'Помилка сервера (' + res.status + ')';
-                    return;
-                }
-
-                const data = await res.json();
-
-                if (data.ok) {
-                    isAdmin = true;
-                    adminLoginError.innerText = '';
-                    closeAdminLogin();
-                    alert('Адмін-режим активовано. Відкрити панель: F2');
-                } else {
-                    adminLoginError.innerText = 'Невірний пароль';
-                }
-            } catch (err) {
-                console.error(err);
-                adminLoginError.innerText = 'Помилка з\'єднання з сервером';
+            if (pass === ADMIN_PASSWORD) {
+                isAdmin = true;
+                closeAdminLogin();
+                // легке візуальне підтвердження – можна замінити на щось інше
+                alert('Адмін-режим активовано. Відкрийте панель');
+            } else {
+                adminLoginError.innerText = 'Невірний пароль';
             }
         }
 
@@ -910,7 +886,7 @@
                 return;
             }
 
-            // F2 – панель адміністратора
+
             if (e.code === 'F2') {
                 e.preventDefault();
                 toggleAdminPanel();
