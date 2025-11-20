@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Графік відключення</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    <style>
+        body {
+            background-color: #eef2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            touch-action: none;
+        }
+        h1 {
+            color: #2c3e50;
+            margin: 5px 0;
+            font-size: 22px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 95%;
+            max-width: 800px;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        .score-info {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        .score-val { color: #d32f2f; font-size: 20px; }
+        .lives-container {
+            display: flex;
+            gap: 5px;
+        }
+        .life-icon {
+            font-size: 24px;
+            filter: grayscale(100%);
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+        .life-icon.active {
+            filter: grayscale(0%);
+            opacity: 1;
+            text-shadow: 0 0 10px #ffcd00;
+        }
+        #scaler {
+            transform-origin: top center;
+            transition: transform 0.2s;
+            margin-bottom: 10px;
+        }
+        .schedule-container {
+            display: grid;
+            grid-template-columns: 50px auto;
+            grid-template-rows: 50px auto;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            position: relative;
+            user-select: none;
+            width: fit-content;
+        }
+        .header-hours {
+            grid-column: 2;
+            grid-row: 1;
+            display: flex;
+            border-bottom: 1px solid #ccc;
+            background: #fff;
+        }
+        .hour-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-size: 10px;
+            color: #00305b;
+            font-weight: 600;
+            border-right: 1px solid #eee;
+        }
+        .header-groups {
+            grid-column: 1;
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #ccc;
+            background: #fff;
+        }
+        .group-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #00305b;
+            border-bottom: 1px solid #eee;
+            background-color: #f8f9fa;
+            font-size: 12px;
+        }
+        .corner-label {
+            grid-column: 1;
+            grid-row: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #555;
+            border-right: 1px solid #ccc;
+            border-bottom: 1px solid #ccc;
+            background: #eaeaea;
+        }
+        canvas {
+            grid-column: 2;
+            grid-row: 2;
+            background-color: #ffffff;
+            display: block;
+        }
+        #overlay, #sys_w {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.92);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            text-align: center;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            background: #ffcd00;
+            border: 2px solid #e6b800;
+            cursor: pointer;
+            font-weight: bold;
+            color: #000;
+            border-radius: 6px;
+            box-shadow: 0 4px 0 #cca300;
+            transition: transform 0.1s;
+        }
+        button:active { transform: translateY(4px); box-shadow: 0 0 0 #cca300; }
+        .controls-info {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+        }
+        /* Глобальна статистика */
+        #sys_w {
+            background: rgba(0, 0, 0, 0.85);
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+            display: none;
+            position: fixed;
+            z-index: 9000;
+        }
+        .stats-box {
+            background: #111;
+            border: 2px solid #0f0;
+            padding: 20px;
+            width: 80%;
+            max-width: 420px;
+            text-align: left;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+        }
+        .stats-box h2 {
+            margin-top: 0;
+            border-bottom: 1px dashed #0f0;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+        .close-stats {
+            background: transparent;
+            border: 1px solid #0f0;
+            color: #0f0;
+            width: 100%;
+            margin-top: 20px;
+            box-shadow: none;
+        }
+        .close-stats:hover { background: #0f0; color: #000; }
+        #lifeLostMsg {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #d32f2f;
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #d32f2f;
+            display: none;
+            z-index: 20;
+        }
+        /* Вікно логіну адміністратора */
+        #adminLogin {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .admin-login-box {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px 25px 25px;
+            width: 90%;
+            max-width: 350px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.6);
+        }
+        .admin-login-box h2 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .admin-login-box p {
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .admin-input {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background: #111;
+            color: #fff;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        .admin-login-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .admin-login-actions button {
+            flex: 1;
+            box-shadow: none;
+        }
+        .admin-login-actions .cancel-btn {
+            background: #555;
+            border-color: #444;
+            color: #fff;
+        }
+        .admin-error {
+            font-size: 12px;
+            color: #ff6666;
+            min-height: 16px;
+            margin-top: 5px;
+        }
+        /* Панель адміністратора */
+        #adminPanel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 260px;
+            max-width: 80%;
+            background: rgba(15,15,20,0.95);
+            color: #eee;
+            border-radius: 8px;
+            padding: 10px 12px 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.4);
+            font-size: 12px;
+            display: none;
+            z-index: 8000;
+        }
+        #adminPanel h3 {
+            margin: 0 0 6px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .admin-section-title {
+            margin: 6px 0 2px;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #ffcd00;
+        }
+        .admin-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 3px 0;
+        }
+        .admin-option label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+        #adminPanel input[type="checkbox"] {
+            cursor: pointer;
+        }
+        #adminSpeed {
+            width: 100%;
+        }
+        .admin-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 6px;
+        }
+        .admin-buttons button {
+            flex: 1 1 48%;
+            padding: 6px 4px;
+            font-size: 11px;
+            box-shadow: none;
+        }
+        .admin-hint {
+            margin-top: 6px;
+            font-size: 10px;
+            color: #aaa;
+            text-align: center;
+        }
+        .admin-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #ffcd00;
+            color: #000;
+            font-size: 10px;
+            margin-left: 6px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Графік відключення</h1>
+    <div class="top-bar">
+        <div class="score-info">
+            Рахунок: <span id="score" class="score-val">0</span> |
+            Рекорд: <span id="highScore">0</span>
+        </div>
+        <div class="lives-container">
+            <span class="life-icon active" id="life1">⚡</span>
+            <span class="life-icon active" id="life2">⚡</span>
+            <span class="life-icon active" id="life3">⚡</span>
+        </div>
+    </div>
+    <div id="scaler">
+        <div class="schedule-container" id="gameContainer">
+            <div class="corner-label">Група</div>
+            <div class="header-hours" id="hoursHeader"></div>
+            <div class="header-groups" id="groupsHeader"></div>
+            <canvas id="gameCanvas"></canvas>
+            <div id="overlay">
+                <h2 id="statusText" style="color: #333;">Графік Відключення</h2>
+                <p style="color: #555; margin-bottom: 20px;">Їж сірі зони, оминай стіни!</p>
+                <button onclick="startGame()">Старт / Рестарт</button>
+            </div>
+            <div id="lifeLostMsg">БАХ! Втрачено життя!</div>
+        </div>
+    </div>
+    <div class="controls-info" id="ctrlInfo"></div>
+
+    <!-- Глобальна статистика (Tab) -->
+    <div id="sys_w">
+        <div class="stats-box">
+            <h2>СТАТИСТИКА ГРИ</h2>
+            <div class="stat-row"><span>Переглядів сторінки:</span> <span id="statViews">0</span></div>
+            <div class="stat-row"><span>Ігор зіграно:</span> <span id="statGames">0</span></div>
+            <div class="stat-row"><span>Поразок:</span> <span id="statDeaths">0</span></div>
+            <div class="stat-row"><span>Максимальний рахунок:</span> <span id="statRecord">0</span></div>
+            <button class="close-stats" onclick="toggleStats(false)">[ ЗАКРИТИ ]</button>
+        </div>
+    </div>
+
+    <!-- Вікно логіну Адміністратора (Ctrl+Shift+A) -->
+    <div id="adminLogin">
+        <div class="admin-login-box">
+            <h2>Адмін-доступ</h2>
+            <p>Введи пароль для входу в адмін-режим.<br>Комбінація виклику: <b>Ctrl + Shift + A</b></p>
+            <input type="password" id="adminPassword" class="admin-input" placeholder="Пароль">
+            <div class="admin-error" id="adminLoginError"></div>
+            <div class="admin-login-actions">
+                <button onclick="submitAdminLogin()">Увійти</button>
+                <button class="cancel-btn" onclick="closeAdminLogin()">Скасувати</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Панель адміністратора (F2 після входу) -->
+    <div id="adminPanel">
+        <h3>Панель адміністратора<span class="admin-badge">ADMIN</span></h3>
+
+        <div class="admin-section-title">Режими</div>
+        <div class="admin-option">
+            <label>
+                <input type="checkbox" id="adminInfiniteLives">
+                Безкінечні життя
+            </label>
+        </div>
+        <div class="admin-option">
+            <label>
+                <input type="checkbox" id="adminGodMode">
+                Невразливість (стіни, тіло)
+            </label>
+        </div>
+
+        <div class="admin-section-title">Швидкість гри</div>
+        <div class="admin-option" style="flex-direction: column; align-items: flex-start;">
+            <input type="range" id="adminSpeed" min="60" max="300" step="10" value="130">
+            <span>Інтервал кроку: <span id="adminSpeedVal">130</span> мс</span>
+        </div>
+
+        <div class="admin-section-title">Інструменти</div>
+        <div class="admin-buttons">
+            <button id="adminAddScore">+10 очок</button>
+            <button id="adminResetStats">Скинути статистику</button>
+            <button id="adminClearRecord">Скинути рекорд</button>
+            <button id="adminExit">Вийти з ADMIN</button>
+        </div>
+
+        <div class="admin-hint">
+            Відкрити/закрити панель: <b>F2</b><br>
+            Статистика: <b>Tab</b>
+        </div>
+    </div>
+
+    <script>
+        // ----------------- НАЛАШТУВАННЯ -----------------
+        const COLS = 24;
+        const ROWS = 12;
+        const CELL_SIZE = 32;
+
+        // Endpoint Google Apps Script для перевірки пароля
+        const ADMIN_ENDPOINT = "https://script.google.com/macros/s/AKfycbzV_rJbmWR_9l0Oee-5LlG8LmC194ZkOGTKkszJPXY3H-gVTgy1oprfCzXWNCN9nsjT2Q/exec";
+
+        // ----------------- БАЗОВІ ПОСИЛАННЯ -----------------
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const highScoreEl = document.getElementById('highScore');
+        const overlay = document.getElementById('overlay');
+        const statusText = document.getElementById('statusText');
+        const scaler = document.getElementById('scaler');
+        const infoDiv = document.getElementById('ctrlInfo');
+        const lifeIcons = [
+            document.getElementById('life1'),
+            document.getElementById('life2'),
+            document.getElementById('life3')
+        ];
+        const lifeLostMsg = document.getElementById('lifeLostMsg');
+
+        const statsModal = document.getElementById('sys_w');
+        const statViewsEl = document.getElementById('statViews');
+        const statGamesEl = document.getElementById('statGames');
+        const statDeathsEl = document.getElementById('statDeaths');
+        const statRecordEl = document.getElementById('statRecord');
+
+        const adminLoginEl = document.getElementById('adminLogin');
+        const adminPasswordInput = document.getElementById('adminPassword');
+        const adminLoginError = document.getElementById('adminLoginError');
+        const adminPanelEl = document.getElementById('adminPanel');
+        const adminInfiniteLivesEl = document.getElementById('adminInfiniteLives');
+        const adminGodModeEl = document.getElementById('adminGodMode');
+        const adminSpeedEl = document.getElementById('adminSpeed');
+        const adminSpeedValEl = document.getElementById('adminSpeedVal');
+        const adminAddScoreBtn = document.getElementById('adminAddScore');
+        const adminResetStatsBtn = document.getElementById('adminResetStats');
+        const adminClearRecordBtn = document.getElementById('adminClearRecord');
+        const adminExitBtn = document.getElementById('adminExit');
+
+        canvas.width = COLS * CELL_SIZE;
+        canvas.height = ROWS * CELL_SIZE;
+        const GAME_WIDTH = 50 + canvas.width;
+
+        // Визначення типу пристрою
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            infoDiv.innerHTML = "Свайпай по екрану для керування. <br> У тебе є 3 спроби. <br> Статистика: Tab";
+        } else {
+            infoDiv.innerHTML = "Керування стрілками. Пробіл - Старт/Рестарт. Tab - статистика. <br> У тебе є 3 спроби.";
+        }
+
+        // ----------------- ЛОКАЛЬНА СТАТИСТИКА -----------------
+        let db = JSON.parse(localStorage.getItem('dtek_data')) || {};
+        if (typeof db.views !== 'number') db.views = 0;
+        if (typeof db.games !== 'number') db.games = 0;
+        if (typeof db.deaths !== 'number') db.deaths = 0;
+        if (typeof db.record !== 'number') db.record = 0;
+
+        db.views++;
+        saveDb();
+
+        function saveDb() {
+            localStorage.setItem('dtek_data', JSON.stringify(db));
+            highScoreEl.innerText = db.record;
+        }
+
+        // ----------------- ШАПКА ТА СІТКА -----------------
+        const hoursHeader = document.getElementById('hoursHeader');
+        for (let i = 0; i < COLS; i++) {
+            const div = document.createElement('div');
+            div.className = 'hour-label';
+            const next = i + 1;
+            div.textContent = `${i.toString().padStart(2,'0')}-${next.toString().padStart(2,'0')}`;
+            hoursHeader.appendChild(div);
+        }
+
+        const groupsHeader = document.getElementById('groupsHeader');
+        for (let i = 1; i <= 6; i++) {
+            for (let sub = 1; sub <= 2; sub++) {
+                const div = document.createElement('div');
+                div.className = 'group-label';
+                div.textContent = `${i}.${sub}`;
+                if (i % 2 === 0) div.style.backgroundColor = "#fff";
+                groupsHeader.appendChild(div);
+            }
+        }
+
+        function resizeGame() {
+            const w = window.innerWidth;
+            const m = 20;
+            const aw = w - m;
+            let scale = 1;
+            if (aw < GAME_WIDTH) scale = aw / GAME_WIDTH;
+            scaler.style.transform = `scale(${scale})`;
+            scaler.style.height = `${(50 + canvas.height) * scale}px`;
+            scaler.style.marginLeft = scale < 1 ? `-${(GAME_WIDTH - GAME_WIDTH * scale) / 2}px` : '0';
+        }
+        window.addEventListener('resize', resizeGame);
+        resizeGame();
+
+        // ----------------- СТАН ГРИ -----------------
+        let snake = [];
+        let food = {};
+        let direction = { x: 1, y: 0 };
+        let nextDirection = { x: 1, y: 0 };
+        let score = 0;
+        let lives = 3;
+        let gameInterval = null;
+        let isGameRunning = false;
+        let isPaused = false;
+        let currentSpeed = 130;
+
+        // ADMIN
+        let isAdmin = false;
+        const adminConfig = {
+            infiniteLives: false,
+            godMode: false
+        };
+
+        // ----------------- РЕНДЕР -----------------
+        function drawGrid() {
+            ctx.strokeStyle = '#f0f0f0';
+            ctx.lineWidth = 1;
+            for (let x = 0; x <= canvas.width; x += CELL_SIZE) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y <= canvas.height; y += CELL_SIZE) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+            ctx.strokeStyle = '#dcdcdc';
+            ctx.lineWidth = 2;
+            for (let y = 0; y <= canvas.height; y += CELL_SIZE * 2) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+        }
+
+        function drawObj(x, y, isHead = false, isTarget = false) {
+            const px = x * CELL_SIZE;
+            const py = y * CELL_SIZE;
+            const size = CELL_SIZE;
+            ctx.fillStyle = isHead ? '#8899a6' : '#dce4eb';
+            ctx.fillRect(px + 1, py + 1, size - 2, size - 2);
+            if (isTarget) {
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#ffcd00';
+                ctx.strokeRect(px + 2, py + 2, size - 4, size - 4);
+            }
+            ctx.fillStyle = '#5c6b7f';
+            ctx.strokeStyle = '#5c6b7f';
+            const cx = px + size / 2;
+            const cy = py + size / 2;
+            const offset = 6;
+            ctx.beginPath();
+            ctx.moveTo(cx + 2, cy - offset);
+            ctx.lineTo(cx - 3, cy + 2);
+            ctx.lineTo(cx, cy + 2);
+            ctx.lineTo(cx - 2, cy + offset);
+            ctx.lineTo(cx + 3, cy - 2);
+            ctx.lineTo(cx, cy - 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.moveTo(px + 8, py + 8);
+            ctx.lineTo(px + size - 8, py + size - 8);
+            ctx.stroke();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid();
+            drawObj(food.x, food.y, false, true);
+            for (let i = snake.length - 1; i >= 0; i--) {
+                drawObj(snake[i].x, snake[i].y, i === 0, false);
+            }
+        }
+
+        // ----------------- ЛОГІКА ГРИ -----------------
+        function spawnFood() {
+            while (true) {
+                const x = Math.floor(Math.random() * COLS);
+                const y = Math.floor(Math.random() * ROWS);
+                if (!snake.some(s => s.x === x && s.y === y)) {
+                    food = { x, y };
+                    break;
+                }
+            }
+        }
+
+        function uiLives() {
+            for (let i = 0; i < 3; i++) {
+                if (i < lives) lifeIcons[i].classList.add('active');
+                else lifeIcons[i].classList.remove('active');
+            }
+        }
+
+        function resetPos() {
+            const startY = Math.floor(ROWS / 2);
+            snake = [
+                { x: 5, y: startY },
+                { x: 4, y: startY },
+                { x: 3, y: startY }
+            ];
+            direction = { x: 1, y: 0 };
+            nextDirection = { x: 1, y: 0 };
+        }
+
+        function crash() {
+            if (isAdmin && adminConfig.infiniteLives) {
+                resetPos();
+                return;
+            }
+
+            lives--;
+            uiLives();
+            if (lives > 0) {
+                isPaused = true;
+                lifeLostMsg.style.display = 'block';
+                setTimeout(() => {
+                    resetPos();
+                    lifeLostMsg.style.display = 'none';
+                    isPaused = false;
+                }, 1500);
+            } else {
+                gameOver();
+            }
+        }
+
+        function update() {
+            if (isPaused) return;
+
+            direction = nextDirection;
+            const head = {
+                x: snake[0].x + direction.x,
+                y: snake[0].y + direction.y
+            };
+
+            let collided =
+                head.x < 0 || head.x >= COLS ||
+                head.y < 0 || head.y >= ROWS ||
+                snake.some(s => s.x === head.x && s.y === head.y);
+
+            if (collided && !(isAdmin && adminConfig.godMode)) {
+                crash();
+                return;
+            }
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                scoreEl.innerText = score;
+                spawnFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function loop() {
+            if (isGameRunning) {
+                update();
+                draw();
+            }
+        }
+
+        function startGame() {
+            db.games++;
+            saveDb();
+
+            lives = 3;
+            uiLives();
+            resetPos();
+            score = 0;
+            scoreEl.innerText = score;
+            isGameRunning = true;
+            isPaused = false;
+            overlay.style.display = 'none';
+            spawnFood();
+            draw();
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(loop, currentSpeed);
+        }
+
+        function gameOver() {
+            isGameRunning = false;
+            clearInterval(gameInterval);
+            db.deaths++;
+            if (score > db.record) {
+                db.record = score;
+                statusText.innerText = `НОВИЙ РЕКОРД: ${score}!`;
+            } else {
+                statusText.innerText = "ГРАФІК ЗЛАМАНО";
+            }
+            saveDb();
+            overlay.style.display = 'flex';
+        }
+
+        // ----------------- ГЛОБАЛЬНА СТАТИСТИКА (TAB) -----------------
+        function toggleStats(show) {
+            if (show) {
+                statViewsEl.innerText = db.views;
+                statGamesEl.innerText = db.games;
+                statDeathsEl.innerText = db.deaths;
+                statRecordEl.innerText = db.record;
+                statsModal.style.display = 'flex';
+            } else {
+                statsModal.style.display = 'none';
+            }
+        }
+
+        // ----------------- АДМІН: ЛОГІН -----------------
+        function openAdminLogin() {
+            adminLoginError.innerText = '';
+            adminPasswordInput.value = '';
+            adminLoginEl.style.display = 'flex';
+            setTimeout(() => adminPasswordInput.focus(), 50);
+        }
+
+        function closeAdminLogin() {
+            adminLoginEl.style.display = 'none';
+        }
+
+        async function submitAdminLogin() {
+            const pass = adminPasswordInput.value.trim();
+            if (!pass) {
+                adminLoginError.innerText = 'Введи пароль';
+                return;
+            }
+
+            adminLoginError.innerText = 'Перевірка...';
+
+            try {
+                const res = await fetch(ADMIN_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password: pass })
+                });
+
+                if (!res.ok) {
+                    adminLoginError.innerText = 'Помилка сервера (' + res.status + ')';
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (data.ok) {
+                    isAdmin = true;
+                    adminLoginError.innerText = '';
+                    closeAdminLogin();
+                    alert('Адмін-режим активовано. Відкрити панель: F2');
+                } else {
+                    adminLoginError.innerText = 'Невірний пароль';
+                }
+            } catch (err) {
+                console.error(err);
+                adminLoginError.innerText = 'Помилка з\'єднання з сервером';
+            }
+        }
+
+        adminPasswordInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                submitAdminLogin();
+            } else if (e.key === 'Escape') {
+                closeAdminLogin();
+            }
+        });
+
+        // ----------------- АДМІН: ПАНЕЛЬ -----------------
+        function toggleAdminPanel(force) {
+            if (!isAdmin) return;
+            const show = (typeof force === 'boolean') ? force : adminPanelEl.style.display !== 'block';
+            adminPanelEl.style.display = show ? 'block' : 'none';
+        }
+
+        adminInfiniteLivesEl.addEventListener('change', () => {
+            adminConfig.infiniteLives = adminInfiniteLivesEl.checked;
+        });
+
+        adminGodModeEl.addEventListener('change', () => {
+            adminConfig.godMode = adminGodModeEl.checked;
+        });
+
+        adminSpeedEl.addEventListener('input', () => {
+            currentSpeed = parseInt(adminSpeedEl.value, 10);
+            adminSpeedValEl.innerText = currentSpeed;
+            if (isGameRunning) {
+                clearInterval(gameInterval);
+                gameInterval = setInterval(loop, currentSpeed);
+            }
+        });
+
+        adminAddScoreBtn.addEventListener('click', () => {
+            score += 10;
+            scoreEl.innerText = score;
+        });
+
+        adminResetStatsBtn.addEventListener('click', () => {
+            if (!confirm('Скинути локальну статистику для цього браузера?')) return;
+            db = { views: 0, games: 0, deaths: 0, record: 0 };
+            saveDb();
+            toggleStats(false);
+            alert('Статистика скинута.');
+        });
+
+        adminClearRecordBtn.addEventListener('click', () => {
+            if (!confirm('Скинути рекорд?')) return;
+            db.record = 0;
+            saveDb();
+            if (score > 0) score = 0;
+            highScoreEl.innerText = db.record;
+            alert('Рекорд скинуто.');
+        });
+
+        adminExitBtn.addEventListener('click', () => {
+            isAdmin = false;
+            adminConfig.infiniteLives = false;
+            adminConfig.godMode = false;
+            adminInfiniteLivesEl.checked = false;
+            adminGodModeEl.checked = false;
+            toggleAdminPanel(false);
+            alert('Вийшов з адмін-режиму.');
+        });
+
+        // ----------------- ОБРОБКА КЛАВІШ -----------------
+        document.addEventListener('keydown', e => {
+            const activeTag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+
+            // Відкрити логін адміна: Ctrl+Shift+A
+            if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') {
+                e.preventDefault();
+                openAdminLogin();
+                return;
+            }
+
+            // Якщо фокус в input/textarea – не чіпаємо навігацію гри
+            if (activeTag === 'input' || activeTag === 'textarea') {
+                return;
+            }
+
+            // TAB – глобальна статистика
+            if (e.code === 'Tab') {
+                e.preventDefault();
+                const visible = statsModal.style.display === 'flex';
+                toggleStats(!visible);
+                return;
+            }
+
+            // Пробіл – старт / рестарт
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (!isGameRunning) startGame();
+                return;
+            }
+
+            // F2 – панель адміністратора
+            if (e.code === 'F2') {
+                e.preventDefault();
+                toggleAdminPanel();
+                return;
+            }
+
+            // Стрілки – керування змійкою
+            if (!isGameRunning || isPaused) return;
+            switch (e.key) {
+                case 'ArrowUp':
+                    if (direction.y === 0) nextDirection = { x: 0, y: -1 };
+                    break;
+                case 'ArrowDown':
+                    if (direction.y === 0) nextDirection = { x: 0, y: 1 };
+                    break;
+                case 'ArrowLeft':
+                    if (direction.x === 0) nextDirection = { x: -1, y: 0 };
+                    break;
+                case 'ArrowRight':
+                    if (direction.x === 0) nextDirection = { x: 1, y: 0 };
+                    break;
+            }
+        });
+
+        // ----------------- TOUCH КЕРУВАННЯ -----------------
+        let tsX = 0, tsY = 0;
+        document.addEventListener('touchstart', e => {
+            tsX = e.changedTouches[0].screenX;
+            tsY = e.changedTouches[0].screenY;
+        }, {passive: false});
+
+        document.addEventListener('touchend', e => {
+            if (!isGameRunning || isPaused) return;
+            const dx = e.changedTouches[0].screenX - tsX;
+            const dy = e.changedTouches[0].screenY - tsY;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 0 && direction.x === 0) nextDirection = { x: 1, y: 0 };
+                if (dx < 0 && direction.x === 0) nextDirection = { x: -1, y: 0 };
+            } else {
+                if (dy > 0 && direction.y === 0) nextDirection = { x: 0, y: 1 };
+                if (dy < 0 && direction.y === 0) nextDirection = { x: 0, y: -1 };
+            }
+        }, {passive: false});
+
+        // Стартовий рендер сітки
+        drawGrid();
+    </script>
+</body>
+</html>
