@@ -457,9 +457,11 @@
         const ROWS = 12;
         const CELL_SIZE = 32;
 
-        // ЗМІНИТИ ПЕРЕД ВИКЛАДАННЯМ НА GITHUB!
         const ADMIN_PASSWORD =  "X9v@фіівфафіаіф21кцйфіасфамівм321кв    цсчфіва 23кавіміц3225кавіфмц е4цецссац38473842661324861241294721111111111111111111111111111111114217421741242614521471F№***q7!rP2#Lm124124124121412412цуйівіфапц11214*****************1241***9авітhabsfasf1421fsdv3*0Z^tWk";
         
+        // --- ЗАВАНТАЖЕННЯ ЗОБРАЖЕННЯ ---
+        const imgIcon = new Image();
+        imgIcon.src = 'img/1.png';
 
         // ----------------- БАЗОВІ ПОСИЛАННЯ -----------------
         const canvas = document.getElementById('gameCanvas');
@@ -500,11 +502,11 @@
         canvas.height = ROWS * CELL_SIZE;
         const GAME_WIDTH = 50 + canvas.width;
 
-        // Визначення типу пристрою
+        // Визначення типу пристрою та оновлення тексту (БЕЗ ЗГАДКИ ПРО TAB)
         if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-            infoDiv.innerHTML = "Свайпай по екрану для керування. <br> У тебе є 3 спроби. <br> Статистика: Tab";
+            infoDiv.innerHTML = "Свайпай по екрану для керування. <br> У тебе є 3 спроби.";
         } else {
-            infoDiv.innerHTML = "Керування стрілками. Пробіл - Старт/Рестарт. Tab - статистика. <br> У тебе є 3 спроби.";
+            infoDiv.innerHTML = "Керування стрілками. Пробіл - Старт/Рестарт. <br> У тебе є 3 спроби.";
         }
 
         // ----------------- ЛОКАЛЬНА СТАТИСТИКА -----------------
@@ -596,31 +598,32 @@
             const px = x * CELL_SIZE;
             const py = y * CELL_SIZE;
             const size = CELL_SIZE;
+            
+            // Малюємо фон (квадратик)
             ctx.fillStyle = isHead ? '#8899a6' : '#dce4eb';
             ctx.fillRect(px + 1, py + 1, size - 2, size - 2);
+            
+            // Якщо це їжа (ціль) - малюємо жовту рамку
             if (isTarget) {
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = '#ffcd00';
                 ctx.strokeRect(px + 2, py + 2, size - 4, size - 4);
             }
-            ctx.fillStyle = '#5c6b7f';
-            ctx.strokeStyle = '#5c6b7f';
-            const cx = px + size / 2;
-            const cy = py + size / 2;
-            const offset = 6;
-            ctx.beginPath();
-            ctx.moveTo(cx + 2, cy - offset);
-            ctx.lineTo(cx - 3, cy + 2);
-            ctx.lineTo(cx, cy + 2);
-            ctx.lineTo(cx - 2, cy + offset);
-            ctx.lineTo(cx + 3, cy - 2);
-            ctx.lineTo(cx, cy - 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.lineWidth = 2;
-            ctx.moveTo(px + 8, py + 8);
-            ctx.lineTo(px + size - 8, py + size - 8);
-            ctx.stroke();
+
+            // МАЛЮЄМО PNG
+            if (imgIcon.complete && imgIcon.naturalHeight !== 0) {
+                ctx.drawImage(imgIcon, px + 3, py + 3, size - 6, size - 6);
+
+                // --- ЗАТЕМНЕННЯ ДЛЯ ГОЛОВИ ---
+                if (isHead) {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)'; 
+                    ctx.fillRect(px + 3, py + 3, size - 6, size - 6);
+                }
+            } else {
+                // Фолбек, якщо картинка не завантажилась
+                ctx.fillStyle = '#5c6b7f';
+                ctx.fillRect(px + 8, py + 8, size - 16, size - 16);
+            }
         }
 
         function draw() {
@@ -663,7 +666,6 @@
         }
 
         function crash() {
-            // Якщо адмін та безкінечні життя – просто ресет позиції, без втрати життя та статистики
             if (isAdmin && adminConfig.infiniteLives) {
                 resetPos();
                 return;
@@ -748,7 +750,7 @@
                 db.record = score;
                 statusText.innerText = `НОВИЙ РЕКОРД: ${score}!`;
             } else {
-                statusText.innerText = "ГРАФІК ЗЛАМАНО";
+                statusText.innerText = "Світло вимкнули!!!";
             }
             saveDb();
             overlay.style.display = 'flex';
@@ -784,7 +786,6 @@
             if (pass === ADMIN_PASSWORD) {
                 isAdmin = true;
                 closeAdminLogin();
-                // легке візуальне підтвердження – можна замінити на щось інше
                 alert('Адмін-режим активовано. Відкрийте панель');
             } else {
                 adminLoginError.innerText = 'Невірний пароль';
@@ -871,11 +872,13 @@
                 return;
             }
 
-            // TAB – глобальна статистика
+            // TAB – глобальна статистика (ТІЛЬКИ ДЛЯ АДМІНА)
             if (e.code === 'Tab') {
-                e.preventDefault();
-                const visible = statsModal.style.display === 'flex';
-                toggleStats(!visible);
+                e.preventDefault(); // Блокуємо стандартну поведінку Tab
+                if (isAdmin) { // Перевіряємо чи користувач адмін
+                    const visible = statsModal.style.display === 'flex';
+                    toggleStats(!visible);
+                }
                 return;
             }
 
