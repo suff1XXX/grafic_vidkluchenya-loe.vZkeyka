@@ -13,15 +13,15 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            min-height: 100dvh; /* Dynamic viewport height for mobile */
             margin: 0;
             overflow: hidden;
-            touch-action: none;
+            touch-action: none; /* Disable browser zooming/panning */
         }
         h1 {
             color: #2c3e50;
             margin: 5px 0;
-            font-size: 22px;
+            font-size: 20px; /* Smaller font for mobile */
             text-transform: uppercase;
             letter-spacing: 1px;
             text-align: center;
@@ -30,27 +30,27 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 95%;
+            width: 98%;
             max-width: 800px;
             background: white;
-            padding: 8px 15px;
+            padding: 8px 10px;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             box-sizing: border-box;
+            font-size: 14px;
         }
         .score-info {
-            font-size: 16px;
             font-weight: bold;
             color: #333;
         }
-        .score-val { color: #d32f2f; font-size: 20px; }
+        .score-val { color: #d32f2f; font-size: 18px; }
         .lives-container {
             display: flex;
-            gap: 5px;
+            gap: 3px;
         }
         .life-icon {
-            font-size: 24px;
+            font-size: 20px;
             filter: grayscale(100%);
             opacity: 0.3;
             transition: all 0.3s;
@@ -63,15 +63,17 @@
         #scaler {
             transform-origin: top center;
             transition: transform 0.2s;
-            margin-bottom: 10px;
+            margin-bottom: 0;
+            display: flex;
+            justify-content: center;
         }
         .schedule-container {
             display: grid;
-            grid-template-columns: 50px auto;
-            grid-template-rows: 50px auto;
+            grid-template-columns: 40px auto; /* Smaller sidebar */
+            grid-template-rows: 40px auto;    /* Smaller header */
             background: white;
             border: 1px solid #ccc;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
             position: relative;
             user-select: none;
             width: fit-content;
@@ -90,7 +92,7 @@
             justify-content: center;
             writing-mode: vertical-rl;
             transform: rotate(180deg);
-            font-size: 10px;
+            font-size: 9px;
             color: #00305b;
             font-weight: 600;
             border-right: 1px solid #eee;
@@ -112,7 +114,7 @@
             color: #00305b;
             border-bottom: 1px solid #eee;
             background-color: #f8f9fa;
-            font-size: 12px;
+            font-size: 11px;
         }
         .corner-label {
             grid-column: 1;
@@ -120,7 +122,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: bold;
             color: #555;
             border-right: 1px solid #ccc;
@@ -136,7 +138,7 @@
         #overlay, #sys_w {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.94);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -145,8 +147,8 @@
             text-align: center;
         }
         button {
-            padding: 12px 30px;
-            font-size: 18px;
+            padding: 12px 24px;
+            font-size: 16px;
             background: #ffcd00;
             border: 2px solid #e6b800;
             cursor: pointer;
@@ -155,18 +157,61 @@
             border-radius: 6px;
             box-shadow: 0 4px 0 #cca300;
             transition: transform 0.1s;
+            touch-action: manipulation;
         }
         button:active { transform: translateY(4px); box-shadow: 0 0 0 #cca300; }
         .controls-info {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
             text-align: center;
-            background: white;
-            padding: 8px 15px;
+            background: rgba(255,255,255,0.8);
+            padding: 5px 10px;
             border-radius: 8px;
             width: 90%;
             max-width: 600px;
+            margin-top: 5px;
         }
+
+        /* Mobile Controls (D-Pad) */
+        #mobileControls {
+            display: none; /* Hidden by default */
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+            width: 180px;
+            height: 120px;
+            z-index: 100;
+        }
+        .mob-btn {
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid #ccc;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            color: #333;
+        }
+        .mob-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.1);
+            background: #ffcd00;
+            border-color: #e6b800;
+        }
+        /* Media query for mobile devices */
+        @media (max-width: 800px) {
+            #mobileControls {
+                display: grid;
+            }
+            .controls-info {
+                display: none; /* Hide text instructions on mobile to save space */
+            }
+        }
+        
         /* Глобальна статистика */
         #sys_w {
             background: rgba(0, 0, 0, 0.85);
@@ -180,7 +225,7 @@
             background: #111;
             border: 2px solid #0f0;
             padding: 20px;
-            width: 80%;
+            width: 85%;
             max-width: 420px;
             text-align: left;
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
@@ -190,11 +235,13 @@
             border-bottom: 1px dashed #0f0;
             padding-bottom: 10px;
             text-align: center;
+            font-size: 18px;
         }
         .stat-row {
             display: flex;
             justify-content: space-between;
             margin: 10px 0;
+            font-size: 14px;
         }
         .close-stats {
             background: transparent;
@@ -209,52 +256,52 @@
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             color: #d32f2f;
-            background: rgba(255,255,255,0.9);
-            padding: 20px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px 25px;
             border-radius: 10px;
             border: 2px solid #d32f2f;
             display: none;
             z-index: 20;
+            white-space: nowrap;
         }
+
         /* Вікно логіну адміністратора */
         #adminLogin {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 10000;
             color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .admin-login-box {
             background: #1e1e1e;
             border-radius: 8px;
-            padding: 20px 25px 25px;
-            width: 90%;
-            max-width: 350px;
+            padding: 20px;
+            width: 85%;
+            max-width: 320px;
             box-shadow: 0 0 15px rgba(0,0,0,0.6);
         }
         .admin-login-box h2 {
-            margin-top: 0;
-            margin-bottom: 10px;
+            margin: 0 0 10px;
             text-align: center;
+            font-size: 18px;
         }
         .admin-login-box p {
             font-size: 12px;
             color: #ccc;
-            margin-top: 0;
-            margin-bottom: 15px;
+            margin: 0 0 15px;
             text-align: center;
         }
         .admin-input {
             width: 100%;
-            padding: 8px 10px;
+            padding: 10px;
             border-radius: 4px;
             border: 1px solid #555;
             background: #111;
@@ -269,6 +316,7 @@
         .admin-login-actions button {
             flex: 1;
             box-shadow: none;
+            padding: 10px;
         }
         .admin-login-actions .cancel-btn {
             background: #555;
@@ -281,17 +329,18 @@
             min-height: 16px;
             margin-top: 5px;
         }
+
         /* Панель адміністратора */
         #adminPanel {
             position: fixed;
             top: 10px;
             right: 10px;
-            width: 260px;
+            width: 240px;
             max-width: 80%;
             background: rgba(15,15,20,0.95);
             color: #eee;
             border-radius: 8px;
-            padding: 10px 12px 12px;
+            padding: 10px;
             box-shadow: 0 0 15px rgba(0,0,0,0.4);
             font-size: 12px;
             display: none;
@@ -307,27 +356,20 @@
             font-weight: bold;
             font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
             color: #ffcd00;
         }
         .admin-option {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin: 3px 0;
+            margin: 4px 0;
         }
         .admin-option label {
             display: flex;
             align-items: center;
             gap: 4px;
-            cursor: pointer;
         }
-        #adminPanel input[type="checkbox"] {
-            cursor: pointer;
-        }
-        #adminSpeed {
-            width: 100%;
-        }
+        #adminSpeed { width: 100%; }
         .admin-buttons {
             display: flex;
             flex-wrap: wrap;
@@ -335,16 +377,10 @@
             margin-top: 6px;
         }
         .admin-buttons button {
-            flex: 1 1 48%;
-            padding: 6px 4px;
+            flex: 1 1 45%;
+            padding: 8px 4px;
             font-size: 11px;
             box-shadow: none;
-        }
-        .admin-hint {
-            margin-top: 6px;
-            font-size: 10px;
-            color: #aaa;
-            text-align: center;
         }
         .admin-badge {
             display: inline-block;
@@ -362,8 +398,8 @@
     <h1>Графік відключення</h1>
     <div class="top-bar">
         <div class="score-info">
-            Рахунок: <span id="score" class="score-val">0</span> |
-            Рекорд: <span id="highScore">0</span>
+            Рах: <span id="score" class="score-val">0</span> |
+            Рек: <span id="highScore">0</span>
         </div>
         <div class="lives-container">
             <span class="life-icon active" id="life1">⚡</span>
@@ -371,84 +407,86 @@
             <span class="life-icon active" id="life3">⚡</span>
         </div>
     </div>
+
     <div id="scaler">
         <div class="schedule-container" id="gameContainer">
-            <div class="corner-label">Група</div>
+            <div class="corner-label">Гр</div>
             <div class="header-hours" id="hoursHeader"></div>
             <div class="header-groups" id="groupsHeader"></div>
             <canvas id="gameCanvas"></canvas>
             <div id="overlay">
                 <h2 id="statusText" style="color: #333;">Графік Відключення</h2>
-                <p style="color: #555; margin-bottom: 20px;">Їж сірі зони, оминай стіни!</p>
-                <button onclick="startGame()">Старт / Рестарт</button>
+                <p style="color: #555; margin-bottom: 20px; font-size: 14px;">Їж сірі зони, оминай стіни!</p>
+                <button onclick="startGame()">Старт</button>
             </div>
-            <div id="lifeLostMsg">БАХ! Втрачено життя!</div>
+            <div id="lifeLostMsg">БАХ! -1 життя</div>
         </div>
     </div>
-    <div class="controls-info" id="ctrlInfo"></div>
 
-    <!-- Глобальна статистика (Tab) -->
+    <!-- Мобільні кнопки керування -->
+    <div id="mobileControls">
+        <div></div>
+        <div class="mob-btn" id="btnUp">▲</div>
+        <div></div>
+        <div class="mob-btn" id="btnLeft">◀</div>
+        <div class="mob-btn" id="btnDown">▼</div>
+        <div class="mob-btn" id="btnRight">▶</div>
+    </div>
+
+    <div class="controls-info" id="ctrlInfo">Керування стрілками. Пробіл - Старт.</div>
+
+    <!-- Статистика -->
     <div id="sys_w">
         <div class="stats-box">
-            <h2>СТАТИСТИКА ГРИ</h2>
-            <div class="stat-row"><span>Переглядів сторінки:</span> <span id="statViews">0</span></div>
-            <div class="stat-row"><span>Ігор зіграно:</span> <span id="statGames">0</span></div>
+            <h2>СТАТИСТИКА</h2>
+            <div class="stat-row"><span>Переглядів:</span> <span id="statViews">0</span></div>
+            <div class="stat-row"><span>Ігор:</span> <span id="statGames">0</span></div>
             <div class="stat-row"><span>Поразок:</span> <span id="statDeaths">0</span></div>
-            <div class="stat-row"><span>Максимальний рахунок:</span> <span id="statRecord">0</span></div>
-            <button class="close-stats" onclick="toggleStats(false)">[ ЗАКРИТИ ]</button>
+            <div class="stat-row"><span>Рекорд:</span> <span id="statRecord">0</span></div>
+            <button class="close-stats" onclick="toggleStats(false)">ЗАКРИТИ</button>
         </div>
     </div>
 
-    <!-- Вікно логіну Адміністратора (Ctrl+Shift+A) -->
+    <!-- Admin Login -->
     <div id="adminLogin">
         <div class="admin-login-box">
             <h2>Адмін-доступ</h2>
-            <p>Введи пароль для входу в адмін-режим.<br>Комбінація виклику: <b>Ctrl + Shift + A</b></p>
+            <p>Комбінація: <b>Ctrl + Shift + A</b></p>
             <input type="password" id="adminPassword" class="admin-input" placeholder="Пароль">
             <div class="admin-error" id="adminLoginError"></div>
             <div class="admin-login-actions">
                 <button onclick="submitAdminLogin()">Увійти</button>
-                <button class="cancel-btn" onclick="closeAdminLogin()">Скасувати</button>
+                <button class="cancel-btn" onclick="closeAdminLogin()">Відміна</button>
             </div>
         </div>
     </div>
 
-    <!-- Панель адміністратора -->
+    <!-- Admin Panel -->
     <div id="adminPanel">
-        <h3>Панель адміністратора<span class="admin-badge">ADMIN</span></h3>
+        <h3>Адмінка<span class="admin-badge">ADM</span></h3>
 
         <div class="admin-section-title">Режими</div>
         <div class="admin-option">
-            <label>
-                <input type="checkbox" id="adminInfiniteLives">
-                Безкінечні життя
-            </label>
+            <label><input type="checkbox" id="adminInfiniteLives"> ∞ Життя</label>
         </div>
         <div class="admin-option">
-            <label>
-                <input type="checkbox" id="adminGodMode">
-                Невразливість (стіни, тіло)
-            </label>
+            <label><input type="checkbox" id="adminGodMode"> Невразливість</label>
         </div>
 
-        <div class="admin-section-title">Швидкість гри</div>
+        <div class="admin-section-title">Швидкість</div>
         <div class="admin-option" style="flex-direction: column; align-items: flex-start;">
             <input type="range" id="adminSpeed" min="60" max="300" step="10" value="130">
-            <span>Інтервал кроку: <span id="adminSpeedVal">130</span> мс</span>
+            <span>Час кроку: <span id="adminSpeedVal">130</span> мс</span>
         </div>
 
-        <div class="admin-section-title">Інструменти</div>
+        <div class="admin-section-title">Дії</div>
         <div class="admin-buttons">
-            <button id="adminAddScore">+10 очок</button>
-            <button id="adminResetStats">Скинути статистику</button>
-            <button id="adminClearRecord">Скинути рекорд</button>
-            <button id="adminExit">Вийти з ADMIN</button>
+            <button id="adminAddScore">+10 очк</button>
+            <button id="adminResetStats">Скинути стат</button>
+            <button id="adminClearRecord">Скинути рек</button>
+            <button id="adminExit">Вихід</button>
         </div>
-
-        <div class="admin-hint">
-            Відкрити/закрити панель: <b>F9</b><br>
-            Статистика: <b>Tab</b>
-        </div>
+        <div class="admin-hint">Панель: <b>F9</b> | Стат: <b>Tab</b></div>
     </div>
 
     <script>
@@ -456,14 +494,12 @@
         const COLS = 24;
         const ROWS = 12;
         const CELL_SIZE = 32;
-
         const ADMIN_PASSWORD =  "X9v@фіівфафіаіф21кцйфіасфамівм321кв    цсчфіва 23кавіміц3225кавіфмц е4цецссац38473842661324861241294721111111111111111111111111111111114217421741242614521471F№***q7!rP2#Lm124124124121412412цуйівіфапц11214*****************1241***9авітhabsfasf1421fsdv3*0Z^tWk";
         
-        // --- ЗАВАНТАЖЕННЯ ЗОБРАЖЕННЯ ---
         const imgIcon = new Image();
         imgIcon.src = 'img/1.png';
 
-        // ----------------- БАЗОВІ ПОСИЛАННЯ -----------------
+        // ----------------- DOM ELEMENTS -----------------
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
@@ -471,12 +507,7 @@
         const overlay = document.getElementById('overlay');
         const statusText = document.getElementById('statusText');
         const scaler = document.getElementById('scaler');
-        const infoDiv = document.getElementById('ctrlInfo');
-        const lifeIcons = [
-            document.getElementById('life1'),
-            document.getElementById('life2'),
-            document.getElementById('life3')
-        ];
+        const lifeIcons = [document.getElementById('life1'), document.getElementById('life2'), document.getElementById('life3')];
         const lifeLostMsg = document.getElementById('lifeLostMsg');
 
         const statsModal = document.getElementById('sys_w');
@@ -485,6 +516,7 @@
         const statDeathsEl = document.getElementById('statDeaths');
         const statRecordEl = document.getElementById('statRecord');
 
+        // Admin DOM
         const adminLoginEl = document.getElementById('adminLogin');
         const adminPasswordInput = document.getElementById('adminPassword');
         const adminLoginError = document.getElementById('adminLoginError');
@@ -493,23 +525,13 @@
         const adminGodModeEl = document.getElementById('adminGodMode');
         const adminSpeedEl = document.getElementById('adminSpeed');
         const adminSpeedValEl = document.getElementById('adminSpeedVal');
-        const adminAddScoreBtn = document.getElementById('adminAddScore');
-        const adminResetStatsBtn = document.getElementById('adminResetStats');
-        const adminClearRecordBtn = document.getElementById('adminClearRecord');
-        const adminExitBtn = document.getElementById('adminExit');
 
         canvas.width = COLS * CELL_SIZE;
         canvas.height = ROWS * CELL_SIZE;
-        const GAME_WIDTH = 50 + canvas.width;
+        const GAME_WIDTH = 40 + canvas.width; // 40px for sidebar
+        const GAME_HEIGHT = 40 + canvas.height; // 40px for header
 
-        // Визначення типу пристрою та оновлення тексту (БЕЗ ЗГАДКИ ПРО TAB)
-        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-            infoDiv.innerHTML = "Свайпай по екрану для керування. <br> У тебе є 3 спроби.";
-        } else {
-            infoDiv.innerHTML = "Керування стрілками. Пробіл - Старт/Рестарт. <br> У тебе є 3 спроби.";
-        }
-
-        // ----------------- ЛОКАЛЬНА СТАТИСТИКА -----------------
+        // ----------------- LOCAL STATS -----------------
         let db = JSON.parse(localStorage.getItem('dtek_data')) || {};
         if (typeof db.views !== 'number') db.views = 0;
         if (typeof db.games !== 'number') db.games = 0;
@@ -524,7 +546,7 @@
             highScoreEl.innerText = db.record;
         }
 
-        // ----------------- ШАПКА ТА СІТКА -----------------
+        // ----------------- GRID HEADER BUILD -----------------
         const hoursHeader = document.getElementById('hoursHeader');
         for (let i = 0; i < COLS; i++) {
             const div = document.createElement('div');
@@ -545,20 +567,43 @@
             }
         }
 
+        // ----------------- RESPONSIVE SCALING -----------------
         function resizeGame() {
             const w = window.innerWidth;
-            const m = 20;
-            const aw = w - m;
-            let scale = 1;
-            if (aw < GAME_WIDTH) scale = aw / GAME_WIDTH;
+            const h = window.innerHeight;
+            
+            // Враховуємо місце для мобільних кнопок, якщо вони видимі
+            const controlsHeight = (w <= 800) ? 130 : 0;
+            const topBarHeight = 60;
+            const headerTitleHeight = 40;
+            
+            const availableWidth = w - 20;
+            const availableHeight = h - topBarHeight - headerTitleHeight - controlsHeight - 20;
+
+            const scaleX = availableWidth / GAME_WIDTH;
+            const scaleY = availableHeight / GAME_HEIGHT;
+            
+            // Вибираємо менший масштаб, щоб помістилось
+            let scale = Math.min(scaleX, scaleY);
+            
+            // Обмежуємо максимальний масштаб (щоб не було пікселів на 4k)
+            if (scale > 1.5) scale = 1.5;
+
             scaler.style.transform = `scale(${scale})`;
-            scaler.style.height = `${(50 + canvas.height) * scale}px`;
-            scaler.style.marginLeft = scale < 1 ? `-${(GAME_WIDTH - GAME_WIDTH * scale) / 2}px` : '0';
+            scaler.style.height = `${GAME_HEIGHT * scale}px`;
+            
+            // Центрування через margin, якщо масштабується по висоті
+            if (scale < 1) {
+                const offset = (GAME_WIDTH - GAME_WIDTH * scale) / 2;
+                scaler.style.marginLeft = `-${offset}px`;
+            } else {
+                scaler.style.marginLeft = '0';
+            }
         }
         window.addEventListener('resize', resizeGame);
-        resizeGame();
+        resizeGame(); // init
 
-        // ----------------- СТАН ГРИ -----------------
+        // ----------------- GAME STATE -----------------
         let snake = [];
         let food = {};
         let direction = { x: 1, y: 0 };
@@ -570,14 +615,10 @@
         let isPaused = false;
         let currentSpeed = 130;
 
-        // ADMIN
         let isAdmin = false;
-        const adminConfig = {
-            infiniteLives: false,
-            godMode: false
-        };
+        const adminConfig = { infiniteLives: false, godMode: false };
 
-        // ----------------- РЕНДЕР -----------------
+        // ----------------- RENDER -----------------
         function drawGrid() {
             ctx.strokeStyle = '#f0f0f0';
             ctx.lineWidth = 1;
@@ -597,32 +638,25 @@
         function drawObj(x, y, isHead = false, isTarget = false) {
             const px = x * CELL_SIZE;
             const py = y * CELL_SIZE;
-            const size = CELL_SIZE;
             
-            // Малюємо фон (квадратик)
             ctx.fillStyle = isHead ? '#8899a6' : '#dce4eb';
-            ctx.fillRect(px + 1, py + 1, size - 2, size - 2);
+            ctx.fillRect(px + 1, py + 1, CELL_SIZE - 2, CELL_SIZE - 2);
             
-            // Якщо це їжа (ціль) - малюємо жовту рамку
             if (isTarget) {
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = '#ffcd00';
-                ctx.strokeRect(px + 2, py + 2, size - 4, size - 4);
+                ctx.strokeRect(px + 2, py + 2, CELL_SIZE - 4, CELL_SIZE - 4);
             }
 
-            // МАЛЮЄМО PNG
             if (imgIcon.complete && imgIcon.naturalHeight !== 0) {
-                ctx.drawImage(imgIcon, px + 3, py + 3, size - 6, size - 6);
-
-                // --- ЗАТЕМНЕННЯ ДЛЯ ГОЛОВИ ---
+                ctx.drawImage(imgIcon, px + 3, py + 3, CELL_SIZE - 6, CELL_SIZE - 6);
                 if (isHead) {
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.25)'; 
-                    ctx.fillRect(px + 3, py + 3, size - 6, size - 6);
+                    ctx.fillRect(px + 3, py + 3, CELL_SIZE - 6, CELL_SIZE - 6);
                 }
             } else {
-                // Фолбек, якщо картинка не завантажилась
                 ctx.fillStyle = '#5c6b7f';
-                ctx.fillRect(px + 8, py + 8, size - 16, size - 16);
+                ctx.fillRect(px + 8, py + 8, CELL_SIZE - 16, CELL_SIZE - 16);
             }
         }
 
@@ -635,7 +669,7 @@
             }
         }
 
-        // ----------------- ЛОГІКА ГРИ -----------------
+        // ----------------- LOGIC -----------------
         function spawnFood() {
             while (true) {
                 const x = Math.floor(Math.random() * COLS);
@@ -656,11 +690,7 @@
 
         function resetPos() {
             const startY = Math.floor(ROWS / 2);
-            snake = [
-                { x: 5, y: startY },
-                { x: 4, y: startY },
-                { x: 3, y: startY }
-            ];
+            snake = [ { x: 5, y: startY }, { x: 4, y: startY }, { x: 3, y: startY } ];
             direction = { x: 1, y: 0 };
             nextDirection = { x: 1, y: 0 };
         }
@@ -670,7 +700,6 @@
                 resetPos();
                 return;
             }
-
             lives--;
             uiLives();
             if (lives > 0) {
@@ -688,14 +717,9 @@
 
         function update() {
             if (isPaused) return;
-
             direction = nextDirection;
-            const head = {
-                x: snake[0].x + direction.x,
-                y: snake[0].y + direction.y
-            };
+            const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
 
-            // Перевірка зіткнень
             let collided =
                 head.x < 0 || head.x >= COLS ||
                 head.y < 0 || head.y >= ROWS ||
@@ -707,7 +731,6 @@
             }
 
             snake.unshift(head);
-
             if (head.x === food.x && head.y === food.y) {
                 score++;
                 scoreEl.innerText = score;
@@ -718,16 +741,12 @@
         }
 
         function loop() {
-            if (isGameRunning) {
-                update();
-                draw();
-            }
+            if (isGameRunning) { update(); draw(); }
         }
 
         function startGame() {
             db.games++;
             saveDb();
-
             lives = 3;
             uiLives();
             resetPos();
@@ -756,7 +775,7 @@
             overlay.style.display = 'flex';
         }
 
-        // ----------------- ГЛОБАЛЬНА СТАТИСТИКА (TAB) -----------------
+        // ----------------- ADMIN SYSTEM -----------------
         function toggleStats(show) {
             if (show) {
                 statViewsEl.innerText = db.views;
@@ -769,7 +788,6 @@
             }
         }
 
-        // ----------------- АДМІН: ЛОГІН -----------------
         function openAdminLogin() {
             adminLoginError.innerText = '';
             adminPasswordInput.value = '';
@@ -777,164 +795,112 @@
             setTimeout(() => adminPasswordInput.focus(), 50);
         }
 
-        function closeAdminLogin() {
-            adminLoginEl.style.display = 'none';
-        }
+        function closeAdminLogin() { adminLoginEl.style.display = 'none'; }
 
         function submitAdminLogin() {
-            const pass = adminPasswordInput.value.trim();
-            if (pass === ADMIN_PASSWORD) {
+            if (adminPasswordInput.value.trim() === ADMIN_PASSWORD) {
                 isAdmin = true;
                 closeAdminLogin();
-                alert('Адмін-режим активовано. Відкрийте панель');
+                alert('Адмін-режим активовано.');
             } else {
-                adminLoginError.innerText = 'Невірний пароль';
+                adminLoginError.innerText = 'Помилка';
             }
         }
 
         adminPasswordInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter') {
-                submitAdminLogin();
-            } else if (e.key === 'Escape') {
-                closeAdminLogin();
-            }
+            if (e.key === 'Enter') submitAdminLogin();
+            if (e.key === 'Escape') closeAdminLogin();
         });
 
-        // ----------------- АДМІН: ПАНЕЛЬ -----------------
         function toggleAdminPanel(force) {
             if (!isAdmin) return;
             const show = (typeof force === 'boolean') ? force : adminPanelEl.style.display !== 'block';
             adminPanelEl.style.display = show ? 'block' : 'none';
         }
 
-        adminInfiniteLivesEl.addEventListener('change', () => {
-            adminConfig.infiniteLives = adminInfiniteLivesEl.checked;
-        });
-
-        adminGodModeEl.addEventListener('change', () => {
-            adminConfig.godMode = adminGodModeEl.checked;
-        });
-
+        // Admin Listeners
+        adminInfiniteLivesEl.addEventListener('change', () => adminConfig.infiniteLives = adminInfiniteLivesEl.checked);
+        adminGodModeEl.addEventListener('change', () => adminConfig.godMode = adminGodModeEl.checked);
         adminSpeedEl.addEventListener('input', () => {
             currentSpeed = parseInt(adminSpeedEl.value, 10);
             adminSpeedValEl.innerText = currentSpeed;
-            if (isGameRunning) {
-                clearInterval(gameInterval);
-                gameInterval = setInterval(loop, currentSpeed);
-            }
+            if (isGameRunning) { clearInterval(gameInterval); gameInterval = setInterval(loop, currentSpeed); }
+        });
+        document.getElementById('adminAddScore').addEventListener('click', () => { score+=10; scoreEl.innerText = score; });
+        document.getElementById('adminResetStats').addEventListener('click', () => {
+            if (confirm('Reset local stats?')) { db = {views:0,games:0,deaths:0,record:0}; saveDb(); toggleStats(false); }
+        });
+        document.getElementById('adminClearRecord').addEventListener('click', () => {
+            if (confirm('Reset record?')) { db.record = 0; saveDb(); highScoreEl.innerText = 0; }
+        });
+        document.getElementById('adminExit').addEventListener('click', () => {
+            isAdmin = false; toggleAdminPanel(false); alert('Logged out');
         });
 
-        adminAddScoreBtn.addEventListener('click', () => {
-            score += 10;
-            scoreEl.innerText = score;
-        });
-
-        adminResetStatsBtn.addEventListener('click', () => {
-            if (!confirm('Скинути локальну статистику для цього браузера?')) return;
-            db = { views: 0, games: 0, deaths: 0, record: 0 };
-            saveDb();
-            toggleStats(false);
-            alert('Статистика скинута.');
-        });
-
-        adminClearRecordBtn.addEventListener('click', () => {
-            if (!confirm('Скинути рекорд?')) return;
-            db.record = 0;
-            saveDb();
-            if (score > 0) score = 0;
-            highScoreEl.innerText = db.record;
-            alert('Рекорд скинуто.');
-        });
-
-        adminExitBtn.addEventListener('click', () => {
-            isAdmin = false;
-            adminConfig.infiniteLives = false;
-            adminConfig.godMode = false;
-            adminInfiniteLivesEl.checked = false;
-            adminGodModeEl.checked = false;
-            toggleAdminPanel(false);
-            alert('Вийшов з адмін-режиму.');
-        });
-
-        // ----------------- ОБРОБКА КЛАВІШ -----------------
-        document.addEventListener('keydown', e => {
-            const activeTag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
-
-            // Відкрити логін адміна: Ctrl+Shift+A
-            if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') {
-                e.preventDefault();
-                openAdminLogin();
-                return;
-            }
-
-            // Якщо фокус в input/textarea – не чіпаємо навігацію гри
-            if (activeTag === 'input' || activeTag === 'textarea') {
-                return;
-            }
-
-            // TAB – глобальна статистика (ТІЛЬКИ ДЛЯ АДМІНА)
-            if (e.code === 'Tab') {
-                e.preventDefault(); // Блокуємо стандартну поведінку Tab
-                if (isAdmin) { // Перевіряємо чи користувач адмін
-                    const visible = statsModal.style.display === 'flex';
-                    toggleStats(!visible);
-                }
-                return;
-            }
-
-            // Пробіл – старт / рестарт
-            if (e.code === 'Space') {
-                e.preventDefault();
-                if (!isGameRunning) startGame();
-                return;
-            }
-
-
-            if (e.code === 'F2') {
-                e.preventDefault();
-                toggleAdminPanel();
-                return;
-            }
-
-            // Стрілки – керування змійкою
+        // ----------------- CONTROLS -----------------
+        function setDir(dx, dy) {
             if (!isGameRunning || isPaused) return;
-            switch (e.key) {
-                case 'ArrowUp':
-                    if (direction.y === 0) nextDirection = { x: 0, y: -1 };
-                    break;
-                case 'ArrowDown':
-                    if (direction.y === 0) nextDirection = { x: 0, y: 1 };
-                    break;
-                case 'ArrowLeft':
-                    if (direction.x === 0) nextDirection = { x: -1, y: 0 };
-                    break;
-                case 'ArrowRight':
-                    if (direction.x === 0) nextDirection = { x: 1, y: 0 };
-                    break;
-            }
+            // Заборона розвороту на 180
+            if ((dx === 1 && direction.x === -1) || (dx === -1 && direction.x === 1)) return;
+            if ((dy === 1 && direction.y === -1) || (dy === -1 && direction.y === 1)) return;
+            
+            // Заборона швидкої зміни напрямку (вже натиснули, але кадр не пройшов)
+            if ((dx === nextDirection.x && dx !== 0) || (dy === nextDirection.y && dy !== 0)) return;
+
+            nextDirection = { x: dx, y: dy };
+        }
+
+        // Keyboard
+        document.addEventListener('keydown', e => {
+            const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+            
+            if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') { e.preventDefault(); openAdminLogin(); return; }
+            if (tag === 'input') return;
+
+            if (e.code === 'Tab' && isAdmin) { e.preventDefault(); toggleStats(statsModal.style.display !== 'flex'); return; }
+            if (e.code === 'Space') { e.preventDefault(); if (!isGameRunning) startGame(); return; }
+            if (e.code === 'F9') { e.preventDefault(); toggleAdminPanel(); return; }
+
+            if (!isGameRunning || isPaused) return;
+            if (e.key === 'ArrowUp') setDir(0, -1);
+            if (e.key === 'ArrowDown') setDir(0, 1);
+            if (e.key === 'ArrowLeft') setDir(-1, 0);
+            if (e.key === 'ArrowRight') setDir(1, 0);
         });
 
-        // ----------------- TOUCH КЕРУВАННЯ -----------------
-        let tsX = 0, tsY = 0;
-        document.addEventListener('touchstart', e => {
-            tsX = e.changedTouches[0].screenX;
-            tsY = e.changedTouches[0].screenY;
-        }, {passive: false});
+        // Mobile D-Pad Listeners
+        const btnUp = document.getElementById('btnUp');
+        const btnDown = document.getElementById('btnDown');
+        const btnLeft = document.getElementById('btnLeft');
+        const btnRight = document.getElementById('btnRight');
 
+        const addTouch = (elem, dx, dy) => {
+            elem.addEventListener('touchstart', (e) => { e.preventDefault(); setDir(dx, dy); });
+            elem.addEventListener('mousedown', (e) => { e.preventDefault(); setDir(dx, dy); });
+        };
+
+        addTouch(btnUp, 0, -1);
+        addTouch(btnDown, 0, 1);
+        addTouch(btnLeft, -1, 0);
+        addTouch(btnRight, 1, 0);
+
+        // Swipe (Fallback)
+        let tsX = 0, tsY = 0;
+        document.addEventListener('touchstart', e => { tsX = e.changedTouches[0].screenX; tsY = e.changedTouches[0].screenY; }, {passive: false});
         document.addEventListener('touchend', e => {
             if (!isGameRunning || isPaused) return;
+            // Ignore swipes if touching buttons area
+            if (e.target.closest('#mobileControls')) return;
+
             const dx = e.changedTouches[0].screenX - tsX;
             const dy = e.changedTouches[0].screenY - tsY;
             if (Math.abs(dx) > Math.abs(dy)) {
-                if (dx > 0 && direction.x === 0) nextDirection = { x: 1, y: 0 };
-                if (dx < 0 && direction.x === 0) nextDirection = { x: -1, y: 0 };
+                if (Math.abs(dx) > 30) setDir(dx > 0 ? 1 : -1, 0);
             } else {
-                if (dy > 0 && direction.y === 0) nextDirection = { x: 0, y: 1 };
-                if (dy < 0 && direction.y === 0) nextDirection = { x: 0, y: -1 };
+                if (Math.abs(dy) > 30) setDir(0, dy > 0 ? 1 : -1);
             }
         }, {passive: false});
 
-        // Стартовий рендер сітки
         drawGrid();
     </script>
 </body>
