@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Графік відключення</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    <style>
+        body {
+            background-color: #eef2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100dvh; /* Dynamic viewport height for mobile */
+            margin: 0;
+            overflow: hidden;
+            touch-action: none; /* Disable browser zooming/panning */
+        }
+        h1 {
+            color: #2c3e50;
+            margin: 5px 0;
+            font-size: 20px; /* Smaller font for mobile */
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 98%;
+            max-width: 800px;
+            background: white;
+            padding: 8px 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .score-info {
+            font-weight: bold;
+            color: #333;
+        }
+        .score-val { color: #d32f2f; font-size: 18px; }
+        .lives-container {
+            display: flex;
+            gap: 3px;
+        }
+        .life-icon {
+            font-size: 20px;
+            filter: grayscale(100%);
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+        .life-icon.active {
+            filter: grayscale(0%);
+            opacity: 1;
+            text-shadow: 0 0 10px #ffcd00;
+        }
+        #scaler {
+            transform-origin: top center;
+            transition: transform 0.2s;
+            margin-bottom: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .schedule-container {
+            display: grid;
+            grid-template-columns: 40px auto; /* Smaller sidebar */
+            grid-template-rows: 40px auto;    /* Smaller header */
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            position: relative;
+            user-select: none;
+            width: fit-content;
+        }
+        .header-hours {
+            grid-column: 2;
+            grid-row: 1;
+            display: flex;
+            border-bottom: 1px solid #ccc;
+            background: #fff;
+        }
+        .hour-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-size: 9px;
+            color: #00305b;
+            font-weight: 600;
+            border-right: 1px solid #eee;
+        }
+        .header-groups {
+            grid-column: 1;
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #ccc;
+            background: #fff;
+        }
+        .group-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #00305b;
+            border-bottom: 1px solid #eee;
+            background-color: #f8f9fa;
+            font-size: 11px;
+        }
+        .corner-label {
+            grid-column: 1;
+            grid-row: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: bold;
+            color: #555;
+            border-right: 1px solid #ccc;
+            border-bottom: 1px solid #ccc;
+            background: #eaeaea;
+        }
+        canvas {
+            grid-column: 2;
+            grid-row: 2;
+            background-color: #ffffff;
+            display: block;
+        }
+        #overlay, #sys_w {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.94);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            text-align: center;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: #ffcd00;
+            border: 2px solid #e6b800;
+            cursor: pointer;
+            font-weight: bold;
+            color: #000;
+            border-radius: 6px;
+            box-shadow: 0 4px 0 #cca300;
+            transition: transform 0.1s;
+            touch-action: manipulation;
+        }
+        button:active { transform: translateY(4px); box-shadow: 0 0 0 #cca300; }
+        .controls-info {
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            background: rgba(255,255,255,0.8);
+            padding: 5px 10px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            margin-top: 5px;
+        }
+
+        /* Mobile Controls (D-Pad) */
+        #mobileControls {
+            display: none; /* Hidden by default */
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+            width: 180px;
+            height: 120px;
+            z-index: 100;
+        }
+        .mob-btn {
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid #ccc;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            color: #333;
+        }
+        .mob-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.1);
+            background: #ffcd00;
+            border-color: #e6b800;
+        }
+        /* Media query for mobile devices */
+        @media (max-width: 800px) {
+            #mobileControls {
+                display: grid;
+            }
+            .controls-info {
+                display: none; /* Hide text instructions on mobile to save space */
+            }
+        }
+        
+        /* Глобальна статистика */
+        #sys_w {
+            background: rgba(0, 0, 0, 0.85);
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+            display: none;
+            position: fixed;
+            z-index: 9000;
+        }
+        .stats-box {
+            background: #111;
+            border: 2px solid #0f0;
+            padding: 20px;
+            width: 85%;
+            max-width: 420px;
+            text-align: left;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+        }
+        .stats-box h2 {
+            margin-top: 0;
+            border-bottom: 1px dashed #0f0;
+            padding-bottom: 10px;
+            text-align: center;
+            font-size: 18px;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .close-stats {
+            background: transparent;
+            border: 1px solid #0f0;
+            color: #0f0;
+            width: 100%;
+            margin-top: 20px;
+            box-shadow: none;
+        }
+        .close-stats:hover { background: #0f0; color: #000; }
+        #lifeLostMsg {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            font-weight: bold;
+            color: #d32f2f;
+            background: rgba(255,255,255,0.95);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 2px solid #d32f2f;
+            display: none;
+            z-index: 20;
+            white-space: nowrap;
+        }
+
+        /* Вікно логіну адміністратора */
+        #adminLogin {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            color: #fff;
+        }
+        .admin-login-box {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            width: 85%;
+            max-width: 320px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.6);
+        }
+        .admin-login-box h2 {
+            margin: 0 0 10px;
+            text-align: center;
+            font-size: 18px;
+        }
+        .admin-login-box p {
+            font-size: 12px;
+            color: #ccc;
+            margin: 0 0 15px;
+            text-align: center;
+        }
+        .admin-input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background: #111;
+            color: #fff;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        .admin-login-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .admin-login-actions button {
+            flex: 1;
+            box-shadow: none;
+            padding: 10px;
+        }
+        .admin-login-actions .cancel-btn {
+            background: #555;
+            border-color: #444;
+            color: #fff;
+        }
+        .admin-error {
+            font-size: 12px;
+            color: #ff6666;
+            min-height: 16px;
+            margin-top: 5px;
+        }
+
+        /* Панель адміністратора */
+        #adminPanel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 240px;
+            max-width: 80%;
+            background: rgba(15,15,20,0.95);
+            color: #eee;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.4);
+            font-size: 12px;
+            display: none;
+            z-index: 8000;
+        }
+        #adminPanel h3 {
+            margin: 0 0 6px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .admin-section-title {
+            margin: 6px 0 2px;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #ffcd00;
+        }
+        .admin-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 4px 0;
+        }
+        .admin-option label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        #adminSpeed { width: 100%; }
+        .admin-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 6px;
+        }
+        .admin-buttons button {
+            flex: 1 1 45%;
+            padding: 8px 4px;
+            font-size: 11px;
+            box-shadow: none;
+        }
+        .admin-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #ffcd00;
+            color: #000;
+            font-size: 10px;
+            margin-left: 6px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Графік відключення</h1>
+    <div class="top-bar">
+        <div class="score-info">
+            Рах: <span id="score" class="score-val">0</span> |
+            Рек: <span id="highScore">0</span>
+        </div>
+        <div class="lives-container">
+            <span class="life-icon active" id="life1">⚡</span>
+            <span class="life-icon active" id="life2">⚡</span>
+            <span class="life-icon active" id="life3">⚡</span>
+        </div>
+    </div>
+
+    <div id="scaler">
+        <div class="schedule-container" id="gameContainer">
+            <div class="corner-label">Гр</div>
+            <div class="header-hours" id="hoursHeader"></div>
+            <div class="header-groups" id="groupsHeader"></div>
+            <canvas id="gameCanvas"></canvas>
+            <div id="overlay">
+                <h2 id="statusText" style="color: #333;">Графік Відключення</h2>
+                <p style="color: #555; margin-bottom: 20px; font-size: 14px;">Їж сірі зони, оминай стіни!</p>
+                <button onclick="startGame()">Старт</button>
+            </div>
+            <div id="lifeLostMsg">БАХ! -1 життя</div>
+        </div>
+    </div>
+
+    <!-- Мобільні кнопки керування -->
+    <div id="mobileControls">
+        <div></div>
+        <div class="mob-btn" id="btnUp">▲</div>
+        <div></div>
+        <div class="mob-btn" id="btnLeft">◀</div>
+        <div class="mob-btn" id="btnDown">▼</div>
+        <div class="mob-btn" id="btnRight">▶</div>
+    </div>
+
+    <div class="controls-info" id="ctrlInfo">Керування стрілками. Пробіл - Старт.</div>
+
+    <!-- Статистика -->
+    <div id="sys_w">
+        <div class="stats-box">
+            <h2>СТАТИСТИКА</h2>
+            <div class="stat-row"><span>Переглядів:</span> <span id="statViews">0</span></div>
+            <div class="stat-row"><span>Ігор:</span> <span id="statGames">0</span></div>
+            <div class="stat-row"><span>Поразок:</span> <span id="statDeaths">0</span></div>
+            <div class="stat-row"><span>Рекорд:</span> <span id="statRecord">0</span></div>
+            <button class="close-stats" onclick="toggleStats(false)">ЗАКРИТИ</button>
+        </div>
+    </div>
+
+    <!-- Admin Login -->
+    <div id="adminLogin">
+        <div class="admin-login-box">
+            <h2>Адмін-доступ</h2>
+            <p>Комбінація: <b>Ctrl + Shift + A</b></p>
+            <input type="password" id="adminPassword" class="admin-input" placeholder="Пароль">
+            <div class="admin-error" id="adminLoginError"></div>
+            <div class="admin-login-actions">
+                <button onclick="submitAdminLogin()">Увійти</button>
+                <button class="cancel-btn" onclick="closeAdminLogin()">Відміна</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel">
+        <h3>Адмінка<span class="admin-badge">ADM</span></h3>
+
+        <div class="admin-section-title">Режими</div>
+        <div class="admin-option">
+            <label><input type="checkbox" id="adminInfiniteLives"> ∞ Життя</label>
+        </div>
+        <div class="admin-option">
+            <label><input type="checkbox" id="adminGodMode"> Невразливість</label>
+        </div>
+
+        <div class="admin-section-title">Швидкість</div>
+        <div class="admin-option" style="flex-direction: column; align-items: flex-start;">
+            <input type="range" id="adminSpeed" min="60" max="300" step="10" value="130">
+            <span>Час кроку: <span id="adminSpeedVal">130</span> мс</span>
+        </div>
+
+        <div class="admin-section-title">Дії</div>
+        <div class="admin-buttons">
+            <button id="adminAddScore">+10 очк</button>
+            <button id="adminResetStats">Скинути стат</button>
+            <button id="adminClearRecord">Скинути рек</button>
+            <button id="adminExit">Вихід</button>
+        </div>
+        <div class="admin-hint">Панель: <b>F9</b> | Стат: <b>Tab</b></div>
+    </div>
+
+    <script>
+        // ----------------- НАЛАШТУВАННЯ -----------------
+        const COLS = 24;
+        const ROWS = 12;
+        const CELL_SIZE = 32;
+        const ADMIN_PASSWORD =  "X9v@фіівфафіаіф21кцйфіасфамівм321кв    цсчфіва 23кавіміц3225кавіфмц е4цецссац38473842661324861241294721111111111111111111111111111111114217421741242614521471F№***q7!rP2#Lm124124124121412412цуйівіфапц11214*****************1241***9авітhabsfasf1421fsdv3*0Z^tWk";
+        
+        const imgIcon = new Image();
+        imgIcon.src = 'img/1.png';
+
+        // ----------------- DOM ELEMENTS -----------------
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const highScoreEl = document.getElementById('highScore');
+        const overlay = document.getElementById('overlay');
+        const statusText = document.getElementById('statusText');
+        const scaler = document.getElementById('scaler');
+        const lifeIcons = [document.getElementById('life1'), document.getElementById('life2'), document.getElementById('life3')];
+        const lifeLostMsg = document.getElementById('lifeLostMsg');
+
+        const statsModal = document.getElementById('sys_w');
+        const statViewsEl = document.getElementById('statViews');
+        const statGamesEl = document.getElementById('statGames');
+        const statDeathsEl = document.getElementById('statDeaths');
+        const statRecordEl = document.getElementById('statRecord');
+
+        // Admin DOM
+        const adminLoginEl = document.getElementById('adminLogin');
+        const adminPasswordInput = document.getElementById('adminPassword');
+        const adminLoginError = document.getElementById('adminLoginError');
+        const adminPanelEl = document.getElementById('adminPanel');
+        const adminInfiniteLivesEl = document.getElementById('adminInfiniteLives');
+        const adminGodModeEl = document.getElementById('adminGodMode');
+        const adminSpeedEl = document.getElementById('adminSpeed');
+        const adminSpeedValEl = document.getElementById('adminSpeedVal');
+
+        canvas.width = COLS * CELL_SIZE;
+        canvas.height = ROWS * CELL_SIZE;
+        const GAME_WIDTH = 40 + canvas.width; // 40px for sidebar
+        const GAME_HEIGHT = 40 + canvas.height; // 40px for header
+
+        // ----------------- LOCAL STATS -----------------
+        let db = JSON.parse(localStorage.getItem('dtek_data')) || {};
+        if (typeof db.views !== 'number') db.views = 0;
+        if (typeof db.games !== 'number') db.games = 0;
+        if (typeof db.deaths !== 'number') db.deaths = 0;
+        if (typeof db.record !== 'number') db.record = 0;
+
+        db.views++;
+        saveDb();
+
+        function saveDb() {
+            localStorage.setItem('dtek_data', JSON.stringify(db));
+            highScoreEl.innerText = db.record;
+        }
+
+        // ----------------- GRID HEADER BUILD -----------------
+        const hoursHeader = document.getElementById('hoursHeader');
+        for (let i = 0; i < COLS; i++) {
+            const div = document.createElement('div');
+            div.className = 'hour-label';
+            const next = i + 1;
+            div.textContent = `${i.toString().padStart(2,'0')}-${next.toString().padStart(2,'0')}`;
+            hoursHeader.appendChild(div);
+        }
+
+        const groupsHeader = document.getElementById('groupsHeader');
+        for (let i = 1; i <= 6; i++) {
+            for (let sub = 1; sub <= 2; sub++) {
+                const div = document.createElement('div');
+                div.className = 'group-label';
+                div.textContent = `${i}.${sub}`;
+                if (i % 2 === 0) div.style.backgroundColor = "#fff";
+                groupsHeader.appendChild(div);
+            }
+        }
+
+        // ----------------- RESPONSIVE SCALING -----------------
+        function resizeGame() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            
+            // Враховуємо місце для мобільних кнопок, якщо вони видимі
+            const controlsHeight = (w <= 800) ? 130 : 0;
+            const topBarHeight = 60;
+            const headerTitleHeight = 40;
+            
+            const availableWidth = w - 20;
+            const availableHeight = h - topBarHeight - headerTitleHeight - controlsHeight - 20;
+
+            const scaleX = availableWidth / GAME_WIDTH;
+            const scaleY = availableHeight / GAME_HEIGHT;
+            
+            // Вибираємо менший масштаб, щоб помістилось
+            let scale = Math.min(scaleX, scaleY);
+            
+            // Обмежуємо максимальний масштаб (щоб не було пікселів на 4k)
+            if (scale > 1.5) scale = 1.5;
+
+            scaler.style.transform = `scale(${scale})`;
+            scaler.style.height = `${GAME_HEIGHT * scale}px`;
+            
+            // Центрування через margin, якщо масштабується по висоті
+            if (scale < 1) {
+                const offset = (GAME_WIDTH - GAME_WIDTH * scale) / 2;
+                scaler.style.marginLeft = `-${offset}px`;
+            } else {
+                scaler.style.marginLeft = '0';
+            }
+        }
+        window.addEventListener('resize', resizeGame);
+        resizeGame(); // init
+
+        // ----------------- GAME STATE -----------------
+        let snake = [];
+        let food = {};
+        let direction = { x: 1, y: 0 };
+        let nextDirection = { x: 1, y: 0 };
+        let score = 0;
+        let lives = 3;
+        let gameInterval = null;
+        let isGameRunning = false;
+        let isPaused = false;
+        let currentSpeed = 130;
+
+        let isAdmin = false;
+        const adminConfig = { infiniteLives: false, godMode: false };
+
+        // ----------------- RENDER -----------------
+        function drawGrid() {
+            ctx.strokeStyle = '#f0f0f0';
+            ctx.lineWidth = 1;
+            for (let x = 0; x <= canvas.width; x += CELL_SIZE) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y <= canvas.height; y += CELL_SIZE) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+            ctx.strokeStyle = '#dcdcdc';
+            ctx.lineWidth = 2;
+            for (let y = 0; y <= canvas.height; y += CELL_SIZE * 2) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+        }
+
+        function drawObj(x, y, isHead = false, isTarget = false) {
+            const px = x * CELL_SIZE;
+            const py = y * CELL_SIZE;
+            
+            ctx.fillStyle = isHead ? '#8899a6' : '#dce4eb';
+            ctx.fillRect(px + 1, py + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+            
+            if (isTarget) {
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#ffcd00';
+                ctx.strokeRect(px + 2, py + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+            }
+
+            if (imgIcon.complete && imgIcon.naturalHeight !== 0) {
+                ctx.drawImage(imgIcon, px + 3, py + 3, CELL_SIZE - 6, CELL_SIZE - 6);
+                if (isHead) {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)'; 
+                    ctx.fillRect(px + 3, py + 3, CELL_SIZE - 6, CELL_SIZE - 6);
+                }
+            } else {
+                ctx.fillStyle = '#5c6b7f';
+                ctx.fillRect(px + 8, py + 8, CELL_SIZE - 16, CELL_SIZE - 16);
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid();
+            drawObj(food.x, food.y, false, true);
+            for (let i = snake.length - 1; i >= 0; i--) {
+                drawObj(snake[i].x, snake[i].y, i === 0, false);
+            }
+        }
+
+        // ----------------- LOGIC -----------------
+        function spawnFood() {
+            while (true) {
+                const x = Math.floor(Math.random() * COLS);
+                const y = Math.floor(Math.random() * ROWS);
+                if (!snake.some(s => s.x === x && s.y === y)) {
+                    food = { x, y };
+                    break;
+                }
+            }
+        }
+
+        function uiLives() {
+            for (let i = 0; i < 3; i++) {
+                if (i < lives) lifeIcons[i].classList.add('active');
+                else lifeIcons[i].classList.remove('active');
+            }
+        }
+
+        function resetPos() {
+            const startY = Math.floor(ROWS / 2);
+            snake = [ { x: 5, y: startY }, { x: 4, y: startY }, { x: 3, y: startY } ];
+            direction = { x: 1, y: 0 };
+            nextDirection = { x: 1, y: 0 };
+        }
+
+        function crash() {
+            if (isAdmin && adminConfig.infiniteLives) {
+                resetPos();
+                return;
+            }
+            lives--;
+            uiLives();
+            if (lives > 0) {
+                isPaused = true;
+                lifeLostMsg.style.display = 'block';
+                setTimeout(() => {
+                    resetPos();
+                    lifeLostMsg.style.display = 'none';
+                    isPaused = false;
+                }, 1500);
+            } else {
+                gameOver();
+            }
+        }
+
+        function update() {
+            if (isPaused) return;
+            direction = nextDirection;
+            const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+
+            let collided =
+                head.x < 0 || head.x >= COLS ||
+                head.y < 0 || head.y >= ROWS ||
+                snake.some(s => s.x === head.x && s.y === head.y);
+
+            if (collided && !(isAdmin && adminConfig.godMode)) {
+                crash();
+                return;
+            }
+
+            snake.unshift(head);
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                scoreEl.innerText = score;
+                spawnFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function loop() {
+            if (isGameRunning) { update(); draw(); }
+        }
+
+        function startGame() {
+            db.games++;
+            saveDb();
+            lives = 3;
+            uiLives();
+            resetPos();
+            score = 0;
+            scoreEl.innerText = score;
+            isGameRunning = true;
+            isPaused = false;
+            overlay.style.display = 'none';
+            spawnFood();
+            draw();
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(loop, currentSpeed);
+        }
+
+        function gameOver() {
+            isGameRunning = false;
+            clearInterval(gameInterval);
+            db.deaths++;
+            if (score > db.record) {
+                db.record = score;
+                statusText.innerText = `НОВИЙ РЕКОРД: ${score}!`;
+            } else {
+                statusText.innerText = "Світло вимкнули!!!";
+            }
+            saveDb();
+            overlay.style.display = 'flex';
+        }
+
+        // ----------------- ADMIN SYSTEM -----------------
+        function toggleStats(show) {
+            if (show) {
+                statViewsEl.innerText = db.views;
+                statGamesEl.innerText = db.games;
+                statDeathsEl.innerText = db.deaths;
+                statRecordEl.innerText = db.record;
+                statsModal.style.display = 'flex';
+            } else {
+                statsModal.style.display = 'none';
+            }
+        }
+
+        function openAdminLogin() {
+            adminLoginError.innerText = '';
+            adminPasswordInput.value = '';
+            adminLoginEl.style.display = 'flex';
+            setTimeout(() => adminPasswordInput.focus(), 50);
+        }
+
+        function closeAdminLogin() { adminLoginEl.style.display = 'none'; }
+
+        function submitAdminLogin() {
+            if (adminPasswordInput.value.trim() === ADMIN_PASSWORD) {
+                isAdmin = true;
+                closeAdminLogin();
+                alert('Адмін-режим активовано.');
+            } else {
+                adminLoginError.innerText = 'Помилка';
+            }
+        }
+
+        adminPasswordInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') submitAdminLogin();
+            if (e.key === 'Escape') closeAdminLogin();
+        });
+
+        function toggleAdminPanel(force) {
+            if (!isAdmin) return;
+            const show = (typeof force === 'boolean') ? force : adminPanelEl.style.display !== 'block';
+            adminPanelEl.style.display = show ? 'block' : 'none';
+        }
+
+        // Admin Listeners
+        adminInfiniteLivesEl.addEventListener('change', () => adminConfig.infiniteLives = adminInfiniteLivesEl.checked);
+        adminGodModeEl.addEventListener('change', () => adminConfig.godMode = adminGodModeEl.checked);
+        adminSpeedEl.addEventListener('input', () => {
+            currentSpeed = parseInt(adminSpeedEl.value, 10);
+            adminSpeedValEl.innerText = currentSpeed;
+            if (isGameRunning) { clearInterval(gameInterval); gameInterval = setInterval(loop, currentSpeed); }
+        });
+        document.getElementById('adminAddScore').addEventListener('click', () => { score+=10; scoreEl.innerText = score; });
+        document.getElementById('adminResetStats').addEventListener('click', () => {
+            if (confirm('Reset local stats?')) { db = {views:0,games:0,deaths:0,record:0}; saveDb(); toggleStats(false); }
+        });
+        document.getElementById('adminClearRecord').addEventListener('click', () => {
+            if (confirm('Reset record?')) { db.record = 0; saveDb(); highScoreEl.innerText = 0; }
+        });
+        document.getElementById('adminExit').addEventListener('click', () => {
+            isAdmin = false; toggleAdminPanel(false); alert('Logged out');
+        });
+
+        // ----------------- CONTROLS -----------------
+        function setDir(dx, dy) {
+            if (!isGameRunning || isPaused) return;
+            // Заборона розвороту на 180
+            if ((dx === 1 && direction.x === -1) || (dx === -1 && direction.x === 1)) return;
+            if ((dy === 1 && direction.y === -1) || (dy === -1 && direction.y === 1)) return;
+            
+            // Заборона швидкої зміни напрямку (вже натиснули, але кадр не пройшов)
+            if ((dx === nextDirection.x && dx !== 0) || (dy === nextDirection.y && dy !== 0)) return;
+
+            nextDirection = { x: dx, y: dy };
+        }
+
+        // Keyboard
+        document.addEventListener('keydown', e => {
+            const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+            
+            if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') { e.preventDefault(); openAdminLogin(); return; }
+            if (tag === 'input') return;
+
+            if (e.code === 'Tab' && isAdmin) { e.preventDefault(); toggleStats(statsModal.style.display !== 'flex'); return; }
+            if (e.code === 'Space') { e.preventDefault(); if (!isGameRunning) startGame(); return; }
+            if (e.code === 'F9') { e.preventDefault(); toggleAdminPanel(); return; }
+
+            if (!isGameRunning || isPaused) return;
+            if (e.key === 'ArrowUp') setDir(0, -1);
+            if (e.key === 'ArrowDown') setDir(0, 1);
+            if (e.key === 'ArrowLeft') setDir(-1, 0);
+            if (e.key === 'ArrowRight') setDir(1, 0);
+        });
+
+        // Mobile D-Pad Listeners
+        const btnUp = document.getElementById('btnUp');
+        const btnDown = document.getElementById('btnDown');
+        const btnLeft = document.getElementById('btnLeft');
+        const btnRight = document.getElementById('btnRight');
+
+        const addTouch = (elem, dx, dy) => {
+            elem.addEventListener('touchstart', (e) => { e.preventDefault(); setDir(dx, dy); });
+            elem.addEventListener('mousedown', (e) => { e.preventDefault(); setDir(dx, dy); });
+        };
+
+        addTouch(btnUp, 0, -1);
+        addTouch(btnDown, 0, 1);
+        addTouch(btnLeft, -1, 0);
+        addTouch(btnRight, 1, 0);
+
+        // Swipe (Fallback)
+        let tsX = 0, tsY = 0;
+        document.addEventListener('touchstart', e => { tsX = e.changedTouches[0].screenX; tsY = e.changedTouches[0].screenY; }, {passive: false});
+        document.addEventListener('touchend', e => {
+            if (!isGameRunning || isPaused) return;
+            // Ignore swipes if touching buttons area
+            if (e.target.closest('#mobileControls')) return;
+
+            const dx = e.changedTouches[0].screenX - tsX;
+            const dy = e.changedTouches[0].screenY - tsY;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (Math.abs(dx) > 30) setDir(dx > 0 ? 1 : -1, 0);
+            } else {
+                if (Math.abs(dy) > 30) setDir(0, dy > 0 ? 1 : -1);
+            }
+        }, {passive: false});
+
+        drawGrid();
+    </script>
+</body>
+</html>
